@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Interest Optimizer | Auth</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB-wOqU0JnvWM3Nt91xhac2x_qO5a54GMQ",
+      authDomain: "dinesh-3b413.firebaseapp.com",
+      projectId: "dinesh-3b413",
+      storageBucket: "dinesh-3b413.firebasestorage.app",
+      messagingSenderId: "1053189064237",
+      appId: "1:1053189064237:web:d261dbebb5e7299e829aa4",
+      measurementId: "G-FPVH4NC1ML"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.handleGoogleLogin = async function (type) {
+      const provider = new GoogleAuthProvider();
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const email = result.user.email;
+
+        const userRef = doc(db, "users", email);
+        const snap = await getDoc(userRef);
+        let userData;
+
+        if (!snap.exists()) {
+          // नया user
+          userData = { plan: "Free", credits: 10 };
+          await setDoc(userRef, userData);
+        } else {
+          // पुराना user
+          userData = snap.data();
+        }
+
+        // Redirect with info
+        const query = new URLSearchParams({
+          email,
+          plan: userData.plan,
+          credits: userData.credits
+        }).toString();
+        window.location.href = `dashboard.html?${query}`;
+      } catch (error) {
+        alert("Login failed: " + error.message);
+        console.error(error);
+      }
+    };
+
+    window.switchPanel = function () {
+      const container = document.getElementById('container');
+      const switchText = document.getElementById('switchText');
+      container.classList.toggle("active");
+      switchText.textContent = container.classList.contains("active") ? "Login" : "Register";
+    };
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #101935;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      width: 800px;
+      height: 500px;
+      background: #fff;
+      border-radius: 20px;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(0,0,0,0.2);
+    }
+    .form-container {
+      flex: 1;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: all 0.6s ease-in-out;
+      z-index: 2;
+    }
+    .login-container { transform: translateX(0%); }
+    .register-container {
+      transform: translateX(100%);
+      position: absolute;
+      top: 0; right: 0;
+      height: 100%;
+    }
+    .container.active .login-container { transform: translateX(-100%); }
+    .container.active .register-container { transform: translateX(0%); }
+
+    .blue-panel {
+      background: linear-gradient(45deg, #1f74ff, #63a4ff);
+      color: white;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 40px;
+      transition: all 0.6s ease-in-out;
+    }
+    .container.active .blue-panel { transform: translateX(-100%); }
+
+    h2 { margin-bottom: 20px; }
+    .google-btn {
+      background: white;
+      color: black;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .google-btn img {
+      height: 20px;
+    }
+    .switch-btn {
+      margin-top: 30px;
+      background: transparent;
+      border: 2px solid white;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="container">
+    <!-- Login Form -->
+    <div class="form-container login-container">
+      <h2>Login</h2>
+      <button class="google-btn" onclick="handleGoogleLogin('login')">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" />
+        Login with Google
+      </button>
+    </div>
+
+    <!-- Register Form -->
+    <div class="form-container register-container">
+      <h2>Register</h2>
+      <button class="google-btn" onclick="handleGoogleLogin('register')">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" />
+        Register with Google
+      </button>
+    </div>
+
+    <!-- Blue Panel -->
+    <div class="blue-panel">
+      <h2>Welcome to InterestOptimizer</h2>
+      <p>Boost your Meta Ads with smart audience targeting</p>
+      <button class="switch-btn" onclick="switchPanel()">Switch to <span id="switchText">Register</span></button>
+    </div>
+  </div>
+</body>
+</html>
